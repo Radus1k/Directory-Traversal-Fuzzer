@@ -2,8 +2,11 @@
   <dictionary name="SICA">
     <words>
       <w>helpme</w>
+      <w>phpsessid</w>
+      <w>randproxy</w>
       <w>succeded</w>
       <w>testval</w>
+      <w>tftp</w>
     </words>
   </dictionary>
 </component>
