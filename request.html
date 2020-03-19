@@ -1,85 +1,79 @@
-wp wp from System32
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 	<head>
+
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
-		<title>Vulnerability: File Inclusion :: Damn Vulnerable Web Application (DVWA) v1.10 *Development*</title>
+		<title>Login :: Damn Vulnerable Web Application (DVWA) v1.10 *Development*</title>
 
-		<link rel="stylesheet" type="text/css" href="../../dvwa/css/main.css" />
-
-		<link rel="icon" type="\image/ico" href="../../favicon.ico" />
-
-		<script type="text/javascript" src="../../dvwa/js/dvwaPage.js"></script>
+		<link rel="stylesheet" type="text/css" href="dvwa/css/login.css" />
 
 	</head>
 
-	<body class="home">
-		<div id="container">
+	<body>
 
-			<div id="header">
+	<div id="wrapper">
 
-				<img src="../../dvwa/images/logo.png" alt="Damn Vulnerable Web Application" />
+	<div id="header">
 
-			</div>
+	<br />
 
-			<div id="main_menu">
+	<p><img src="dvwa/images/login_logo.png" /></p>
 
-				<div id="main_menu_padded">
-				<ul class="menuBlocks"><li class=""><a href="../../.">Home</a></li>
-<li class=""><a href="../../instructions.php">Instructions</a></li>
-<li class=""><a href="../../setup.php">Setup / Reset DB</a></li>
-</ul><ul class="menuBlocks"><li class=""><a href="../../vulnerabilities/brute/">Brute Force</a></li>
-<li class=""><a href="../../vulnerabilities/exec/">Command Injection</a></li>
-<li class=""><a href="../../vulnerabilities/csrf/">CSRF</a></li>
-<li class="selected"><a href="../../vulnerabilities/fi/.?page=include.php">File Inclusion</a></li>
-<li class=""><a href="../../vulnerabilities/upload/">File Upload</a></li>
-<li class=""><a href="../../vulnerabilities/captcha/">Insecure CAPTCHA</a></li>
-<li class=""><a href="../../vulnerabilities/sqli/">SQL Injection</a></li>
-<li class=""><a href="../../vulnerabilities/sqli_blind/">SQL Injection (Blind)</a></li>
-<li class=""><a href="../../vulnerabilities/weak_id/">Weak Session IDs</a></li>
-<li class=""><a href="../../vulnerabilities/xss_d/">XSS (DOM)</a></li>
-<li class=""><a href="../../vulnerabilities/xss_r/">XSS (Reflected)</a></li>
-<li class=""><a href="../../vulnerabilities/xss_s/">XSS (Stored)</a></li>
-<li class=""><a href="../../vulnerabilities/csp/">CSP Bypass</a></li>
-<li class=""><a href="../../vulnerabilities/javascript/">JavaScript</a></li>
-</ul><ul class="menuBlocks"><li class=""><a href="../../security.php">DVWA Security</a></li>
-<li class=""><a href="../../phpinfo.php">PHP Info</a></li>
-<li class=""><a href="../../about.php">About</a></li>
-</ul><ul class="menuBlocks"><li class=""><a href="../../logout.php">Logout</a></li>
-</ul>
-				</div>
+	<br />
 
-			</div>
+	</div> <!--<div id="header">-->
 
-			<div id="main_body">
+	<div id="content">
 
-				
-				<br /><br />
-				
+	<form action="login.php" method="post">
 
-			</div>
+	<fieldset>
 
-			<div class="clear">
-			</div>
+			<label for="user">Username</label> <input type="text" class="loginInput" size="20" name="username"><br />
 
-			<div id="system_info">
-				<input type="button" value="View Help" class="popup_button" id='help_button' data-help-url='../../vulnerabilities/view_help.php?id=fi&security=low' )"> <input type="button" value="View Source" class="popup_button" id='source_button' data-source-url='../../vulnerabilities/view_source.php?id=fi&security=low' )"> <div align="left"><em>Username:</em> admin<br /><em>Security Level:</em> low<br /><em>PHPIDS:</em> disabled</div>
-			</div>
 
-			<div id="footer">
+			<label for="pass">Password</label> <input type="password" class="loginInput" AUTOCOMPLETE="off" size="20" name="password"><br />
 
-				<p>Damn Vulnerable Web Application (DVWA) v1.10 *Development*</p>
-				<script src='../..//dvwa/js/add_event_listeners.js'></script>
+			<br />
 
-			</div>
+			<p class="submit"><input type="submit" value="Login" name="Login"></p>
 
-		</div>
+	</fieldset>
+
+	<input type='hidden' name='user_token' value='961da65725494b0e217fa254e7234a62' />
+
+	</form>
+
+	<br />
+
+	<div class="message">CSRF token is incorrect</div>
+
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
+
+	<!-- <img src="dvwa/images/RandomStorm.png" /> -->
+	</div > <!--<div id="content">-->
+
+	<div id="footer">
+
+	<p><a href="http://www.dvwa.co.uk/" target="_blank">Damn Vulnerable Web Application (DVWA)</a></p>
+
+	</div> <!--<div id="footer"> -->
+
+	</div> <!--<div id="wrapper"> -->
 
 	</body>
 
-</html>http://localhost:8080/DVWA-master/vulnerabilities/fi/?page=../../../../../../../../../Windows/System32/config/test.php
+</html>
 
 
