@@ -1,0 +1,2 @@
+C:\xampp\apache\logs\access.log
+C:\xampp\apache\logs\error.log

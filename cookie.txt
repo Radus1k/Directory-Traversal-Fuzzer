@@ -1,0 +1,1 @@
+security=medium; PHPSESSID=lhbc43ju90d8a4sj0j23b8np7g
