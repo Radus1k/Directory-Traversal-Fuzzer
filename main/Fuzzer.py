@@ -1,20 +1,21 @@
 import random
 import tkinter
-import json
+from tkinter import messagebox
 import concurrent.futures
-import fuzzing_vars as fv
-
-from requests import RequestException
+import main.fuzzing_vars as fv
+from lxml.html import fromstring
+from bs4 import BeautifulSoup
 import requests
+import time
 from requests import cookies
 import collections
-from matplotlib import pyplot as plt
 import re
-from pdf_Generator import write_to_pdf
-import crawl_links
+from main.Code_Handlers import Code_Handlers
+from main import crawl_links
+from main.pdf_Generator import write_to_pdf
 import time
-from DB import DatabaseConnection
-from DB import copy_db_to_android
+from main.Mutators import MultipleMutation
+from main.DB import DatabaseConnection
 
 
 def flatten(x):
@@ -36,27 +37,58 @@ req_Session = requests.session()
 
 
 class FuzzEngine:
-    def __init__(self, url, port, cookie, module, save_results, payloads, check_crawl_links, shell_file, check_https,
-                 quite_mode, gui_proxy, threads_no, method, username, password, header_list):
+    def __init__(self, url, port, cookie, module, save_results, payloads, check_crawl_links, shell_file, check_head,
+                 quite_mode, gui_proxy, threads_no, method, username, password, header_list, request_time, auth_data,
+                 auth_check, user_agent, depth_no, mutator_value,check_rfi_bool):
+
+        # Variables for  PDF PLOTS#
+        self.plot_mutators = list()
+        self.plot_mutators_count = int(0)
+        self.plot_depth = int(0)
+        self.plot_payload = list()
+        self.plot_payload_count = int(0)
+        self.plot_others = list()
+        self.plot_all_y = list()
+        self.plot_all_count = int(0)
+        self.request_statuses = list()
+        self.req_values = list()
+        for i in range(10):
+            self.req_values.append(0)
+
+
+        #Fuzzing Variables
+        self.status_interested_in = [200, 301, 302, 400, 403, 500]
         self.url = url
+        self.check_rfi_b = check_rfi_bool
+        self.pdf_url = str()
         self.http_headers = header_list
         self.dbConn = DatabaseConnection()
         self.plot_x = []  # time
         self.plot_y = []  # founded vulnerabilties
         self.plot_y_attempts = []
+        self.time_per_request = 0.3
+        self.request_time = request_time
         self.start = int(round(time.time()))
         self.attempts = int(0)
         self.port = port
-        # self.cookie = cookie
+        self.mutator_box = mutator_value
+        # self.cookie = self.set_cookies(cookie)
         self.cookie = self.set_cookie_for_DWVA()
         self.payloads = payloads
-        self.https_check = check_https
-        self.method = method
+        self.check_head = check_head
+        self.method = list()
+        self.auth_data_list = auth_data
+        self.method.append(method)
+        self.check_headf()
         self.threads_no = threads_no
         self.proxy = gui_proxy
         self.payload_content = list()  # list of strings for every payload file
         self.faults = int(0)
         self.admin = username
+        self.user_agent = user_agent
+        self.depth_no = depth_no
+        self.rfi_check = bool(False)
+
         self.password = password
         self.responses_list = list()
         self.dots_exploitable = fv.dots_exploitable
@@ -73,151 +105,266 @@ class FuzzEngine:
         self.max_directories_depth = 5
 
         self.port = port
-        # self.cookie = cookie
         self.module = module
         self.save_results_bool = save_results
         self.payloads_files = payloads
         self.check_craw_links = check_crawl_links
         self.shell_file = shell_file
-        self.check_HTTPS = check_https
         self.check_quite_mode = quite_mode
         self.full_url = self.get_full_url(self.url, self.module)
         self.fuzzer_paused = False
         self.fuzz_counter = 0
+        self.check_timer()
+        if auth_check:
+            self.set_auth()
 
+    def set_auth(self):
+        global req_Session
+        # U                 [user,                   pass]
+        req_Session.auth = {self.auth_data_list[0], self.auth_data_list[1]}
 
-    def get_url_indexes_to_inject(self):
+    def set_user_agent(self):
+        global req_Session
+        if len(self.user_agent) > 2:
+            user_agent_h = {'User-Agent': self.user_agent}
+            req_Session.headers.update(user_agent_h)
+
+    def check_headf(self):
+        if self.check_head == 1:
+            self.method.append("HEAD")
+
+    def check_timer(self):
+        if self.request_time > 0:
+            self.time_per_request = self.request_time
+
+    def get_url_indexes_to_inject(self, url, crawl=0):
         indexes = list()
-        regex = re.compile('file=|page=|index.php')
-        match = regex.search(self.full_url)
-        try:
-            if match.end(0) != -1:
-                indexes.append(match.end(0))
-            if match.end(1) != -1:
-                indexes.append(match.end(1))
-            if match.end(2) != -1:
-                indexes.append(match.end(2))
-        finally:
-            last_bracket = self.full_url.rfind("/")
-            if last_bracket > 6:  # other than http://
-                indexes.append(last_bracket)
-            else:
-                indexes.append(len(self.full_url))
-            return indexes
+        regex = re.compile('file=|page=|index.php|image=|home.php')
+        match = regex.search(url)
+        if crawl == 0:
+            try:
+                if match.end(0) != -1:
+                    if "file=" or "page=" in url:# length of "page=" is 5 and teh match.end return the start of regex
+                        indexes.append(match.end(0) + 5)
+                    if "home.php" in url:#
+                        indexes.append(match.end(0) + 8)
+                    if "image=" in url:# length of "page=" is 5 and teh match.end return the start of regex
+                        indexes.append(match.end(0) + 6)
+                    if "index.php=" in url:
+                        indexes.append(match.end(0) + 9)
+            finally:
+                indexes.append(len(url))
+                return indexes
+        else:
+            try:
+                if match.end(0) != -1:
+                    return url
+                else:
+                    return ""
+            except Exception as e:
+                return ""
+            finally:
+                pass
 
     def extract_payloads(self):
         for payload_path in self.payloads:  # self.payloads its a list of filenames containing the malitious input
-            if payload_path == "Default Payload":
-                payload_path = self.payload_def_path
-            with open(payload_path, encoding='utf-8') as f:
-                content = f.readlines()
-            content = [x.strip() for x in content]
-            self.payload_content.append(content)
+            if payload_path != '':
+                if payload_path == "Default Payload":
+                    payload_path = self.payload_def_path
+                with open(payload_path, encoding='utf-8') as f:
+                    content = f.readlines()
+                content = [x.strip() for x in content]
+                self.payload_content.append(content)
+            else:
+                messagebox.showerror(title="Bad payload", message="Please select valid payload path!")
 
     def pause_fuzzing(self):
         self.fuzzer_paused = True
 
     def resume(self, root):
         self.fuzzer_paused = False
-        self.get_request_status(self.full_url, root)
+        self.get_request_status(self.full_url, self.method, root)
 
     def start_fuzzing(self, root):
         # rand_proxy = args.randproxy
         # cookie = set_cookie_for_DWVA(cookie)
         self.extract_payloads()
+        self.set_user_agent()
+        self.write_crawl_links()# it may take too long, for big websites, like google for example
         # if rand_proxy is True:
         # proxy = get_rand_proxy, module)
         login_to_Site()
         self.set_http_headers()
+        if self.check_rfi_b:
+            self.check_rfi(root)
         self.fuzz_Engine(root)
-        # print(self.threads_no)
-        write_to_pdf(self.plot_x, self.plot_y)
+        if self.save_results_bool:
+            write_to_pdf(self.plot_x, self.plot_y, self.plot_payload_count, self.plot_mutators_count, self.plot_depth,
+                         self.plot_all_count, self.attempts, self.faults, self.full_url, self.req_values,
+                         self.request_statuses, self.rfi_check, self.pdf_url)
         self.dbConn.my_cursor.close()
         self.dbConn.connection.close()
+        messagebox.showinfo("Info", "Fuzzing proccess ended!")
         # copy_db_to_android()
 
     def getFaults(self):
         return self.faults
 
+    def add_depth(self, url, payload):
+        bad_urls = list()
+        if self.depth_no > 0:
+            for i in range(self.depth_no):
+                for prefix in fv.Special_Prefixes:
+                    for mid in fv.Special_Mid_Patterns:
+                        for suffix in fv.Special_Sufixes:
+                            bad_url = url + prefix + mid * (i + 1) + payload + suffix
+                            bad_urls.append(bad_url)
+                            bad_url = url + mid * (i + 1) + payload  # + suffix
+                            bad_urls.append(bad_url)
+        return bad_urls
+
+    def check_rfi(self, root):
+        url_list = list()
+        url_list.append("http://www.google.ro/")
+        url_list.append("https://www.google.ro/")
+        url_list.append("HTTP://WWW.GOOGLE.RO/")
+        url_list.append("HTTPS://WWW.GOOGLE.RO/")
+        for url in url_list:
+            fuzzed = str(self.full_url[:-1] + url)
+            status = self.send_request("GET", fuzzed)
+            root.addrow("GET", status, fuzzed, 0)
+            if status in self.status_interested_in:
+                self.rfi_check = True
+        return url_list
+
     def inject_dt(self, full_url):
         full_url = full_url.partition("\n")[0]
-        indexes = self.get_url_indexes_to_inject()
+        indexes = self.get_url_indexes_to_inject(full_url, crawl=0)
         payloads = flatten(self.payload_content)
         url_vulnerables = list()
         for index in indexes:
-            if index != -1:
-                for payLoad in payloads:
+            for payLoad in payloads:
+                if '%fuzz%' not in full_url:
                     url_bad = full_url[:index + 5] + payLoad
                     url_vulnerables.append(url_bad)
+                else:
+                    pos = full_url.find('%fuzz%')
+                    url_bad = full_url[:pos] + payLoad + full_url[pos+6:]
+                    url_vulnerables.append(url_bad)
+                self.plot_payload_count = self.plot_payload_count + 1
+                if self.depth_no > 0:
+                    url_depths = self.add_depth(full_url, payLoad)
+                    url_vulnerables += url_depths
+                    self.plot_depth += len(url_depths)
+                if self.mutator_box:
+                    multObj = MultipleMutation(payLoad, 5)
+                    res = multObj.fuzz_elem()
+                    number_of_res = len(res)
+                    self.plot_mutators_count += number_of_res
+                    for ind in res:
+                        url_bad = full_url[:index + 5] + ind
+                        # url_vulnerables.append(url_bad)
+                        # self.plot_mutators_count = self.plot_mutators_count + 1
+                        url_vulnerables.append(url_bad)
         return url_vulnerables
 
-    def send_request(self, url):
+    def send_request(self, method, url):
+        global req_Session
         self.attempts = self.attempts + 1
-        # self.plot_y_attempts.append(self.attempts)
-        # self.plot_y.append(self.faults)
         # self.plot_x.append(int(round(time.time())) - self.start)
-
+        req = requests.Request
         try:
-            if self.method == "GET":
-                req_Session = requests.get(url, cookies=self.cookie, proxies=self.proxy, timeout=0.1)
+            if method == "GET":
+                req = req_Session.get(url, cookies=self.cookie, proxies=self.proxy, timeout=self.time_per_request)
+                # req = req_Session.get(url)#, cookies=self.cookie)
 
-            if self.method == "POST":
-                req_Session = requests.post(url, cookies=self.cookie, proxies=self.proxy, timeout=0.1)
+            elif method == "POST":
+                req = req_Session.post(url, cookies=self.cookie, proxies=self.proxy, timeout=self.time_per_request)
 
-            successful_headers.append(req_Session.url + "\n" + str(req_Session.headers))
-            req_text = req_Session.text
-            successful_texts.append(req_Session.url + "\n" + req_text)
-            # if req_Session.status_code == 200:
+            elif method == "HEAD":
+                req = req_Session.head(url, cookies=self.cookie, proxies=self.proxy, timeout=self.time_per_request)
+
+            else:  # default get
+                req = req_Session.get(url, cookies=self.cookie, proxies=self.proxy, timeout=self.time_per_request)
+
+            successful_headers.append(req.url + "\n" + str(req.headers))
+            successful_texts.append(url + "\n" + req.text)
+
+            # if req_Session.status_code in self.status_interested_in :
 
             # successful_headers.append(str(req_Session.url) + "\n" + str(req_Session.headers))
             # error_headers.append(str(req_Session.url) + "\n" + str(req_Session.headers))
 
-            if req_Session.status_code != 200:
-                # if req_text.find("Failed opening") > 0 or req_text.find("such") > 0 or req_text.find("Error") > 0:
+            # if req.status_code not in self.status_interested_in:
+            # if req_text.find("Failed opening") > 0 or req_text.find("such") > 0 or req_text.find("Error") > 0:
+            # self.faults = self.faults + 1
+            # self.plot_x.append(self.faults)
+            # self.plot_y.append(int(round(time.time())) - self.start)
+            # return req_Session.status_code
+            al = req.text
+            title = str((al[al.find('<title>') + 7: al.find('</title>')]))
+            Handler = Code_Handlers()
+            status_code = Handler.get_status(al, title)
+            if status_code in self.status_interested_in:
+                self.pdf_url += url + '\n'
                 self.faults = self.faults + 1
-                self.plot_x.append(self.faults)
-                self.plot_y.append(int(round(time.time())) - self.start)
-                # return req_Session.status_code
-            # if req_text not in self.responses_list:
-            #   #self.responses_list.append(req_text)
-            # else:
-            #   return 404
-            return req_Session.status_code
-        except Exception as e:
-            print("error at request")
-            if str(e).find("Read timed out") != -1:
-                return 408  # timeout
-        return req_Session.status_code
+            self.plot_x.append(self.attempts)
+            self.plot_y.append(self.faults)
+            return status_code
+
+        except ConnectionError as e:
+            print("error at request" + str(e))
+            return 500
+        except requests.Timeout as req_timeout:
+            #print("Coneection Timeout !!" + str(req_timeout))
+            return 408
+        except requests.exceptions as e:
+            print(e)
+
+    def write_crawl_links(self):
+        time_in_sec = time.time()
+        full_url = self.get_full_url(self.url, self.module)
+        if self.check_craw_links == 1:
+            crawled_links = crawl_links.getAllUrl(full_url, time_in_sec)# maxim 30 seconds for this operation
+
+            with open('crawl_links', 'w') as f:
+                for link in crawled_links:
+                    ans = self.get_url_indexes_to_inject(link, crawl=1)
+                    if len(ans) > 2: # or not equal to ""
+                        f.write("%s\n" % link)
 
     def fuzz_Engine(self, root):
         full_url = self.get_full_url(self.url, self.module)
-        if self.check_craw_links == 1:
-            fuzzed_urls = self.inject_dt(full_url)
-            self.get_request_status(fuzzed_urls, root)
-            crawled_links = crawl_links.getAllUrl(full_url)
-            for crawled in crawled_links:
-                injected_list = self.inject_dt(crawled)
-                self.get_request_status(injected_list, root)
-        else:
-            fuzzed_urls = self.inject_dt(full_url)
-            self.get_request_status(fuzzed_urls, root)
+        fuzzed_urls = self.inject_dt(full_url)
+        # all_urls = mutator_list + fuzzed_urls
+        ##fuzzed_urls = [fuzzed_urls, mutator_list]
+        for method in self.method:
+            self.get_request_status(fuzzed_urls, method, root)
+            self.fuzz_counter = 0
 
-    def get_request_status(self, fuzzed_urls, root):
+    def get_request_status(self, fuzzed_urls, method, root):
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.threads_no) as executor:
-            url_list = {executor.submit(self.send_request, url): url for url in fuzzed_urls[self.fuzz_counter:]}
+            url_list = {executor.submit(self.send_request, method, url): url for url in
+                        fuzzed_urls[self.fuzz_counter:]}
             for future in concurrent.futures.as_completed(url_list):
                 fuzzed = url_list[future]
                 try:
                     status = future.result()
+                    if status not in self.request_statuses:
+                        self.request_statuses.append(status)
+                        self.req_values[self.request_statuses.index(status)] = 1
+                    else:
+                        self.req_values[self.request_statuses.index(status)] += 1
+
                     if not self.fuzzer_paused:
                         self.fuzz_counter = self.fuzz_counter + 1
                         self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
                         if self.check_quite_mode == 0:
-                            root.addrow(status, fuzzed, len(fuzzed))
+                            root.addrow(method, status, fuzzed, len(fuzzed))
 
                             tkinter.Frame.update(root)
-                        elif self.check_quite_mode == 1 and status == 200:
-                            root.addrow(status, fuzzed, len(fuzzed))
+                        elif self.check_quite_mode == 1 and status in self.status_interested_in:
+                            root.addrow(method, status, fuzzed, len(fuzzed))
                             tkinter.Frame.update(root)
                         else:
                             break
@@ -225,7 +372,15 @@ class FuzzEngine:
                         break
 
                 except Exception as e:
-                    print(e)
+                    if "timed out" in str(e):
+                        status = 408
+                        root.addrow(method, status, fuzzed, len(fuzzed))
+                        self.fuzz_counter = self.fuzz_counter + 1
+                        self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
+                        tkinter.Frame.update(root)
+                    else:
+                        print("Error here at rquest status: " + str(e))
+            del executor
 
     def get_full_url(self, url, module):
         if len(self.port) < 2:
@@ -252,11 +407,11 @@ class FuzzEngine:
     def set_cookie_for_DWVA():
         cookie = requests.cookies.RequestsCookieJar()
         security = 'security'
-        security_value = 'medium'
+        security_value = 'low'
         session = 'PHPSESSID'
         # response = requests.post('http://127.0.0.1/dvwa/login.php',
         #                        data={'username': 'admin', 'password': 'password', 'Login': 'Login'})
-        session_value = '0ndt9teo4bv2qteja0uo5fqkjs'
+        session_value = 'k54r976mqr4qqe28s679tfitua'
         cookie.set(security, security_value)
         cookie.set(session, session_value)
         return cookie
@@ -274,6 +429,7 @@ class FuzzEngine:
         return proxyDict
 
     def set_http_headers(self):
+        global req_Session
         headers_tuple = {}
         for tuple_ in self.http_headers:
             headers_tuple[tuple_[0]] = tuple_[1]
@@ -293,13 +449,12 @@ def write_response(req, filename):
         f.write('\n\n\n')
         f.close()
 
+def signal_handler(signum, frame):
+    raise Exception("Timed out!")
 
 def login_to_Site():
-    login_payload = {
-        'username': 'admin',
-        'password': 'password',
-        'Login': 'Login'
-    }
+    global req_Session
+    login_payload = {'username': 'admin', 'password': 'password', 'Login': 'Login'}
     try:
         response = req_Session.get('http://127.0.0.1:8080/DVWA-master/login.php')
         token = re.search("user_token'\s*value='(.*?)'", response.text).group(1)
@@ -308,5 +463,4 @@ def login_to_Site():
     except:
         print("cannot log in")
     finally:
-        print("Logged in!")
-
+        pass

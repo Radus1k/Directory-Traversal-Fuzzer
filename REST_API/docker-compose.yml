@@ -4,4 +4,6 @@ services:
     device_registry:
         build: .
         volumes:
-            - .:D:/Licenta Proiect Practic/REST_API
+           - D:/Licenta Proiect Practic/REST_API
+        ports:
+            - 5000:80

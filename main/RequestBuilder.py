@@ -1,6 +1,6 @@
 import requests
 from requests import cookies
-from Fuzzer import req_Session, login_to_Site
+from main.Fuzzer import req_Session, login_to_Site
 
 import re
 

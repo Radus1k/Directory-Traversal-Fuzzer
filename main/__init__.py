@@ -1,8 +1,16 @@
 import argparse
 import socket
 import sys
+
+sys.path.append('D:\\Licenta Proiect Practic')
+sys.path.append('D:\\Licenta Proiect Practic\\main')
+sys.path.append('D:\\Licenta Proiect Practic\\Py_Environment\\Lib\\site-packages')
+sys.path.append('D:\\Licenta Proiect Practic\\Images')
+sys.path.append('D:\\Licenta Proiect Practic\\Proxy-list')
+
 from argparse import ArgumentParser
 from main.gui import run
+
 
 def menu():
     parser = ArgumentParser(description="Choose option for fuzzing test", formatter_class=argparse.RawTextHelpFormatter,
@@ -71,9 +79,8 @@ def _setRealAddress(self, address):
 
 
 def main():
-    run()
+	run()
     #gui.run()
-    print("true")
     #examples.write_to_pdf()
     #print(crawl_links.getAllUrl("https://www.emag.ro/"))
     #print(socket.gethostbyname("www.google.ro"))

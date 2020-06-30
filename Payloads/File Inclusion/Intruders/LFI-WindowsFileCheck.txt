@@ -50,6 +50,14 @@ C:\apache2\logs\error.log
 C:\apache2\logs\access.log
 C:\apache2\logs\error_log
 C:\apache2\logs\access_log
+C:\xampp\apache\logs\error.log
+C:\xampp\apache\logs\access.log
+C:\xampp\apache\logs\error_log
+C:\xampp\apache\logs\access_log
+C:\xampp\apache\logs\error.log
+C:\xampp\apache\logs\access.log
+C:\xampp\apache\logs\error_log
+C:\xampp\apache\logs\access_log
 C:\logs\error.log
 C:\logs\access.log
 C:\logs\error_log

@@ -2,7 +2,7 @@ import tkinter
 from tkinter import Text
 import webbrowser
 import re
-from Fuzzer import successful_headers, successful_texts
+from main.Fuzzer import successful_headers, successful_texts
 
 url_global = str()
 

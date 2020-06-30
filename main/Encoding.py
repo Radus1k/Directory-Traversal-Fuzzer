@@ -2,7 +2,6 @@ import binascii
 import urllib.parse
 import base64
 import html
-
 # values = ["URL", "HTML", "Base64", "Text", "Hex", "Binary"]
 from tkinter import END
 
@@ -32,15 +31,25 @@ class Encoder:
         return binascii.hexlify(bytearray(self.str, 'utf8'))
 
     def fromHex(self):
-        print("from hex to text")
-        return binascii.unhexlify(bytearray(self.str, 'utf8'))
+        return binascii.unhexlify(bytearray(self.str.strip(), 'utf8'))
 
+    #def toBinary(self):
+    #   #return ' '.join(format(ord(x), 'b') for x in self.str)
+    #    return bin(int.from_bytes(self.str.encode(), 'big'))
 
-    def toBinary(self):
-        return ' '.join(format(ord(x), 'b') for x in self.str)
+    #def fromBinary(self):
+    #    #return self.str.encode('ascii')
+    #    n = int(self.str, 2)
+    #    n.to_bytes((n.bit_length() + 7) // 8, 'big').decode()
+    #    return n
 
-    def fromBinary(self):
-        return self.str.encode('ascii')
+    def toBinary(self, encoding='utf-8', errors='surrogatepass'):
+        bits = bin(int.from_bytes(self.str.encode(encoding, errors), 'big'))[2:]
+        return bits.zfill(8 * ((len(bits) + 7) // 8))
+
+    def fromBinary(self, encoding='utf-8', errors='surrogatepass'):
+        n = int(self.str, 2)
+        return n.to_bytes((n.bit_length() + 7) // 8, 'big').decode(encoding, errors) or '\0'
 
     @staticmethod
     def write_to_TextWidget(string, widget):
