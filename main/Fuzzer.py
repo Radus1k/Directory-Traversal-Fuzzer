@@ -55,7 +55,6 @@ class FuzzEngine:
         for i in range(10):
             self.req_values.append(0)
 
-
         #Fuzzing Variables
         self.status_interested_in = [200, 301, 302, 400, 403, 500]
         self.url = url
@@ -72,8 +71,8 @@ class FuzzEngine:
         self.attempts = int(0)
         self.port = port
         self.mutator_box = mutator_value
-        # self.cookie = self.set_cookies(cookie)
-        self.cookie = self.set_cookie_for_DWVA()
+        self.cookie = self.set_cookies(cookie)
+        #self.cookie = self.set_cookie_for_DWVA()
         self.payloads = payloads
         self.check_head = check_head
         self.method = list()
@@ -144,8 +143,8 @@ class FuzzEngine:
         if crawl == 0:
             try:
                 if match.end(0) != -1:
-                    if "file=" or "page=" in url:# length of "page=" is 5 and teh match.end return the start of regex
-                        indexes.append(match.end(0) + 5)
+                    #if "file=" or "page=" in url:# length of "page=" is 5 and teh match.end return the start of regex
+                    #    indexes.append(match.end(0) + 5)
                     if "home.php" in url:#
                         indexes.append(match.end(0) + 8)
                     if "image=" in url:# length of "page=" is 5 and teh match.end return the start of regex
@@ -301,10 +300,15 @@ class FuzzEngine:
             # self.plot_x.append(self.faults)
             # self.plot_y.append(int(round(time.time())) - self.start)
             # return req_Session.status_code
-            al = req.text
-            title = str((al[al.find('<title>') + 7: al.find('</title>')]))
-            Handler = Code_Handlers()
-            status_code = Handler.get_status(al, title)
+            #al = req.text
+            #title = str((al[al.find('<title>') + 7: al.find('</title>')]))
+            #Handler = Code_Handlers()
+            #status = req.status_code
+            #try:
+            #    status_code = Handler.get_status(al, title, status)
+           # except:
+            #    status_code = status
+            status_code = req.status_code
             if status_code in self.status_interested_in:
                 self.pdf_url += url + '\n'
                 self.faults = self.faults + 1
@@ -452,7 +456,7 @@ def write_response(req, filename):
 def signal_handler(signum, frame):
     raise Exception("Timed out!")
 
-def login_to_Site():
+def login_to_Site(username, password):
     global req_Session
     login_payload = {'username': 'admin', 'password': 'password', 'Login': 'Login'}
     try:
@@ -464,3 +468,9 @@ def login_to_Site():
         print("cannot log in")
     finally:
         pass
+    #
+
+def set_auth(username, password, login_page):
+    global req_Session
+    from requests.auth import HTTPBasicAuth
+    req_Session.get(login_page, auth=HTTPBasicAuth(username, password))

@@ -73,18 +73,14 @@ class RequestBuilder:
             print("error" + self.request_type)
             return None
         # port = self.get_gui_Port()
-
         try:
             if self.request_type == "GET":
-                print("url: " + self.full_url)
-                print(self.cookie)
                 response = req_Session.get(self.full_url,  cookies=self.cookie)
                 #response = req_Session.get(self.full_url, headers=self.headers, cookies=self.cookie)
-
             else:
                 response = req_Session.post(self.full_url, headers=self.headers, cookies=self.cookie)
             return response
-        except req_Session.exceptions.RequestException as e:
+        except requests.exceptions.RequestException as e:
             print(e)
 
     def set_cookies(self):

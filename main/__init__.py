@@ -79,7 +79,7 @@ def _setRealAddress(self, address):
 
 
 def main():
-	run()
+    run()
     #gui.run()
     #examples.write_to_pdf()
     #print(crawl_links.getAllUrl("https://www.emag.ro/"))

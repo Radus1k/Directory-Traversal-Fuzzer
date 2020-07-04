@@ -127,7 +127,19 @@ class Application(Frame):
     def restart_app(self):
         # self.destroy()c
         # run()
-        print("wroking on it")
+        import os
+        import sys
+        import psutil
+        import logging
+        try:
+            p = psutil.Process(os.getpid())
+            for handler in p.open_files() + p.connections():
+                 os.close(handler.fd)
+        except Exception as e:
+            logging.error(e)
+
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
 
     # def go_to_requests(self):
     #    self.tab_tools.select(self.tab5)
@@ -563,7 +575,7 @@ class Application(Frame):
 
         self.tab_parent.add(self.tab2, text="Basic Configuration")
         self.tab_parent.add(self.tab3, text="Monitoring")
-        self.tab_parent.add(self.tab4, text="Advanced")
+        self.tab_parent.add(self.tab4, text="Options")
         self.tab_parent.add(self.tab_tools, text="Tools")
         # self.tab_parent.add(self.tab_help, text="Help")
 
@@ -1000,10 +1012,10 @@ class Application(Frame):
                                                                                                              20, 0))
         self.request_ip.pack(side=LEFT, padx=(10, 0))
 
-        Label(self.port_stuff, text="Target Port", bg=self.grey, fg=self.blue_btn_color, font=self.myFont).pack(
-            side=LEFT,
-            padx=(20, 0))
-        self.request_port.pack(side=LEFT, padx=(10, 0))
+        #Label(self.port_stuff, text="Target Port", bg=self.grey, fg=self.blue_btn_color, font=self.myFont).pack(
+        #    side=LEFT,
+        #    padx=(20, 0))
+        #self.request_port.pack(side=LEFT, padx=(10, 0))
 
         self.port_stuff.configure(bg=self.grey)
         self.ip_stuff.configure(bg=self.grey)

@@ -12,7 +12,7 @@ class Code_Handlers:
         self.NOT_IMPLEMENTED = 501
         self.SERVICE_UNAV = 503
 
-    def get_status(self, text, title):
+    def get_status(self, text, title, status):
         title = title.lower()
         text = text.lower()
         if title.find("201 created") > 0 or text.find("201 created") > 0:
@@ -35,4 +35,5 @@ class Code_Handlers:
             return self.NOT_IMPLEMENTED
         if title.find("service unavailable") > 0 or title.find("503") > 0 or text.find("service unavailable") > 0:
             return self.SERVICE_UNAV
-        return 200
+        return status
+
