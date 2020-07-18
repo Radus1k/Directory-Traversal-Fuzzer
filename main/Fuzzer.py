@@ -15,6 +15,7 @@ from main import crawl_links
 from main.pdf_Generator import write_to_pdf
 import time
 from main.Mutators import MultipleMutation
+from main.Code_Handlers import Code_Handlers
 from main.DB import DatabaseConnection
 
 
@@ -61,7 +62,7 @@ class FuzzEngine:
         self.check_rfi_b = check_rfi_bool
         self.pdf_url = str()
         self.http_headers = header_list
-        self.dbConn = DatabaseConnection()
+        #self.dbConn = DatabaseConnection()
         self.plot_x = []  # time
         self.plot_y = []  # founded vulnerabilties
         self.plot_y_attempts = []
@@ -201,8 +202,8 @@ class FuzzEngine:
             write_to_pdf(self.plot_x, self.plot_y, self.plot_payload_count, self.plot_mutators_count, self.plot_depth,
                          self.plot_all_count, self.attempts, self.faults, self.full_url, self.req_values,
                          self.request_statuses, self.rfi_check, self.pdf_url)
-        self.dbConn.my_cursor.close()
-        self.dbConn.connection.close()
+        #self.dbConn.my_cursor.close()
+        #self.dbConn.connection.close()
         messagebox.showinfo("Info", "Fuzzing proccess ended!")
         # copy_db_to_android()
 
@@ -274,7 +275,7 @@ class FuzzEngine:
         req = requests.Request
         try:
             if method == "GET":
-                req = req_Session.get(url, cookies=self.cookie, proxies=self.proxy, timeout=self.time_per_request)
+                req = req_Session.get(url, cookies=self.cookie, proxies=self.proxy)#, timeout=self.time_per_request)
                 # req = req_Session.get(url)#, cookies=self.cookie)
 
             elif method == "POST":
@@ -299,16 +300,14 @@ class FuzzEngine:
             # self.faults = self.faults + 1
             # self.plot_x.append(self.faults)
             # self.plot_y.append(int(round(time.time())) - self.start)
-            # return req_Session.status_code
-            #al = req.text
-            #title = str((al[al.find('<title>') + 7: al.find('</title>')]))
-            #Handler = Code_Handlers()
-            #status = req.status_code
-            #try:
-            #    status_code = Handler.get_status(al, title, status)
-           # except:
-            #    status_code = status
-            status_code = req.status_code
+            # return req_Session.status_cod
+            al = req.text
+            title = str((al[al.find('<title>') + 7: al.find('</title>')]))
+            Handler = Code_Handlers()
+            status_code = Handler.get_status(al, title, req.status_code)
+            if status_code is None:
+                status_code = req.status_code
+
             if status_code in self.status_interested_in:
                 self.pdf_url += url + '\n'
                 self.faults = self.faults + 1
@@ -362,7 +361,7 @@ class FuzzEngine:
 
                     if not self.fuzzer_paused:
                         self.fuzz_counter = self.fuzz_counter + 1
-                        self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
+                        #self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
                         if self.check_quite_mode == 0:
                             root.addrow(method, status, fuzzed, len(fuzzed))
 
@@ -376,14 +375,20 @@ class FuzzEngine:
                         break
 
                 except Exception as e:
+                    print(e)
                     if "timed out" in str(e):
                         status = 408
                         root.addrow(method, status, fuzzed, len(fuzzed))
                         self.fuzz_counter = self.fuzz_counter + 1
-                        self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
+                        #self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
                         tkinter.Frame.update(root)
                     else:
-                        print("Error here at rquest status: " + str(e))
+                        status = 404
+                        root.addrow(method, status, fuzzed, len(fuzzed))
+                        self.fuzz_counter = self.fuzz_counter + 1
+                        #self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
+                        tkinter.Frame.update(root)
+                        #print("Error here at rquest status: " + str(e))
             del executor
 
     def get_full_url(self, url, module):
@@ -456,7 +461,7 @@ def write_response(req, filename):
 def signal_handler(signum, frame):
     raise Exception("Timed out!")
 
-def login_to_Site(username, password):
+def login_to_Site(username="", password=""):
     global req_Session
     login_payload = {'username': 'admin', 'password': 'password', 'Login': 'Login'}
     try:

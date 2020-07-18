@@ -1,15 +1,14 @@
 import argparse
 import socket
 import sys
+from argparse import ArgumentParser
+from main.gui import run
 
 sys.path.append('D:\\Licenta Proiect Practic')
 sys.path.append('D:\\Licenta Proiect Practic\\main')
 sys.path.append('D:\\Licenta Proiect Practic\\Py_Environment\\Lib\\site-packages')
 sys.path.append('D:\\Licenta Proiect Practic\\Images')
 sys.path.append('D:\\Licenta Proiect Practic\\Proxy-list')
-
-from argparse import ArgumentParser
-from main.gui import run
 
 
 def menu():

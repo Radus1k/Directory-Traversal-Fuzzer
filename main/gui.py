@@ -669,7 +669,6 @@ class Application(Frame):
     def create_basicConf(self):
 
         self.tab2.configure(style='Black.TLabelframe')
-
         intro_label = Label(self.tab2, text="Setup the Configuration Settings", font="Helvetica 20 ",
                             fg=self.blue_btn_color, background='#282c36')
         intro_label.configure(anchor=CENTER)
@@ -677,7 +676,7 @@ class Application(Frame):
 
         ip_Text = Label(self.tab2, font=self.myFont,
                         text="Enter the target URL (example: http://google.ro:80/)"
-                             " Type '%fuzz% if you want to add the payload on a specific position\nBy default is at the end of string, and after some patterns (file=, page=)",
+                             " Use '%fuzz% if you want to add the payload at a specific position",
                         fg=self.blue_btn_color, background='#282c36')
         ip_Text.grid(row=1, column=0, columnspan=4, sticky=W, pady=5, padx=200)
 
@@ -1076,9 +1075,7 @@ class Application(Frame):
         self.resp_ipVar.set(self.get_gui_IP())
         self.resp_portVar.set(self.get_gui_Port())
 
-
         FuzzEngine.start_fuzzing(self.FuzzerObj, self)
-
 
 def center(toplevel):
     toplevel.update_idletasks()
@@ -1090,7 +1087,6 @@ def center(toplevel):
     x = screen_width / 2 - size[0] / 2
     y = screen_height / 2 - size[1] / 2
     toplevel.geometry("+%d+%d" % (x, y))
-
 
 def run():
     root = Tk()
