@@ -40,7 +40,7 @@ req_Session = requests.session()
 class FuzzEngine:
     def __init__(self, url, port, cookie, module, save_results, payloads, check_crawl_links, shell_file, check_head,
                  quite_mode, gui_proxy, threads_no, method, username, password, header_list, request_time, auth_data,
-                 auth_check, user_agent, depth_no, mutator_value,check_rfi_bool):
+                 auth_check, user_agent, depth_no, mutator_value, check_rfi_bool):
 
         # Variables for  PDF PLOTS#
         self.plot_mutators = list()
@@ -56,13 +56,13 @@ class FuzzEngine:
         for i in range(10):
             self.req_values.append(0)
 
-        #Fuzzing Variables
+        # Fuzzing Variables
         self.status_interested_in = [200, 301, 302, 400, 403, 500]
         self.url = url
         self.check_rfi_b = check_rfi_bool
         self.pdf_url = str()
         self.http_headers = header_list
-        #self.dbConn = DatabaseConnection()
+        # self.dbConn = DatabaseConnection()
         self.plot_x = []  # time
         self.plot_y = []  # founded vulnerabilties
         self.plot_y_attempts = []
@@ -73,7 +73,7 @@ class FuzzEngine:
         self.port = port
         self.mutator_box = mutator_value
         self.cookie = self.set_cookies(cookie)
-        #self.cookie = self.set_cookie_for_DWVA()
+        # self.cookie = self.set_cookie_for_DWVA()
         self.payloads = payloads
         self.check_head = check_head
         self.method = list()
@@ -144,11 +144,11 @@ class FuzzEngine:
         if crawl == 0:
             try:
                 if match.end(0) != -1:
-                    #if "file=" or "page=" in url:# length of "page=" is 5 and teh match.end return the start of regex
+                    # if "file=" or "page=" in url:# length of "page=" is 5 and teh match.end return the start of regex
                     #    indexes.append(match.end(0) + 5)
-                    if "home.php" in url:#
+                    if "home.php" in url:  #
                         indexes.append(match.end(0) + 8)
-                    if "image=" in url:# length of "page=" is 5 and teh match.end return the start of regex
+                    if "image=" in url:  # length of "page=" is 5 and teh match.end return the start of regex
                         indexes.append(match.end(0) + 6)
                     if "index.php=" in url:
                         indexes.append(match.end(0) + 9)
@@ -190,7 +190,7 @@ class FuzzEngine:
         # cookie = set_cookie_for_DWVA(cookie)
         self.extract_payloads()
         self.set_user_agent()
-        self.write_crawl_links()# it may take too long, for big websites, like google for example
+        self.write_crawl_links()  # it may take too long, for big websites, like google for example
         # if rand_proxy is True:
         # proxy = get_rand_proxy, module)
         login_to_Site()
@@ -202,8 +202,8 @@ class FuzzEngine:
             write_to_pdf(self.plot_x, self.plot_y, self.plot_payload_count, self.plot_mutators_count, self.plot_depth,
                          self.plot_all_count, self.attempts, self.faults, self.full_url, self.req_values,
                          self.request_statuses, self.rfi_check, self.pdf_url)
-        #self.dbConn.my_cursor.close()
-        #self.dbConn.connection.close()
+        # self.dbConn.my_cursor.close()
+        # self.dbConn.connection.close()
         messagebox.showinfo("Info", "Fuzzing proccess ended!")
         # copy_db_to_android()
 
@@ -249,7 +249,7 @@ class FuzzEngine:
                     url_vulnerables.append(url_bad)
                 else:
                     pos = full_url.find('%fuzz%')
-                    url_bad = full_url[:pos] + payLoad + full_url[pos+6:]
+                    url_bad = full_url[:pos] + payLoad + full_url[pos + 6:]
                     url_vulnerables.append(url_bad)
                 self.plot_payload_count = self.plot_payload_count + 1
                 if self.depth_no > 0:
@@ -272,14 +272,9 @@ class FuzzEngine:
         global req_Session
         self.attempts = self.attempts + 1
         # self.plot_x.append(int(round(time.time())) - self.start)
-        req = requests.Request
         try:
             if method == "GET":
-                req = req_Session.get(url, cookies=self.cookie, proxies=self.proxy)#, timeout=self.time_per_request)
-                # req = req_Session.get(url)#, cookies=self.cookie)
-
-            elif method == "POST":
-                req = req_Session.post(url, cookies=self.cookie, proxies=self.proxy, timeout=self.time_per_request)
+                req = req_Session.get(url, cookies=self.cookie, proxies=self.proxy, timeout=self.time_per_request)
 
             elif method == "HEAD":
                 req = req_Session.head(url, cookies=self.cookie, proxies=self.proxy, timeout=self.time_per_request)
@@ -290,17 +285,6 @@ class FuzzEngine:
             successful_headers.append(req.url + "\n" + str(req.headers))
             successful_texts.append(url + "\n" + req.text)
 
-            # if req_Session.status_code in self.status_interested_in :
-
-            # successful_headers.append(str(req_Session.url) + "\n" + str(req_Session.headers))
-            # error_headers.append(str(req_Session.url) + "\n" + str(req_Session.headers))
-
-            # if req.status_code not in self.status_interested_in:
-            # if req_text.find("Failed opening") > 0 or req_text.find("such") > 0 or req_text.find("Error") > 0:
-            # self.faults = self.faults + 1
-            # self.plot_x.append(self.faults)
-            # self.plot_y.append(int(round(time.time())) - self.start)
-            # return req_Session.status_cod
             al = req.text
             title = str((al[al.find('<title>') + 7: al.find('</title>')]))
             Handler = Code_Handlers()
@@ -316,24 +300,25 @@ class FuzzEngine:
             return status_code
 
         except ConnectionError as e:
-            print("error at request" + str(e))
-            return 500
+            print("error at request connection" + str(e))
+            return 408
         except requests.Timeout as req_timeout:
-            #print("Coneection Timeout !!" + str(req_timeout))
+            print("Coneection Timeout !!")
             return 408
         except requests.exceptions as e:
-            print(e)
+            print("req error " + e)
+            return 408
 
     def write_crawl_links(self):
         time_in_sec = time.time()
         full_url = self.get_full_url(self.url, self.module)
         if self.check_craw_links == 1:
-            crawled_links = crawl_links.getAllUrl(full_url, time_in_sec)# maxim 30 seconds for this operation
+            crawled_links = crawl_links.getAllUrl(full_url, time_in_sec)  # maxim 30 seconds for this operation
 
             with open('crawl_links', 'w') as f:
                 for link in crawled_links:
                     ans = self.get_url_indexes_to_inject(link, crawl=1)
-                    if len(ans) > 2: # or not equal to ""
+                    if len(ans) > 2:  # or not equal to ""
                         f.write("%s\n" % link)
 
     def fuzz_Engine(self, root):
@@ -361,7 +346,7 @@ class FuzzEngine:
 
                     if not self.fuzzer_paused:
                         self.fuzz_counter = self.fuzz_counter + 1
-                        #self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
+                        # self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
                         if self.check_quite_mode == 0:
                             root.addrow(method, status, fuzzed, len(fuzzed))
 
@@ -374,21 +359,14 @@ class FuzzEngine:
                     else:
                         break
 
-                except Exception as e:
-                    print(e)
-                    if "timed out" in str(e):
-                        status = 408
-                        root.addrow(method, status, fuzzed, len(fuzzed))
-                        self.fuzz_counter = self.fuzz_counter + 1
-                        #self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
-                        tkinter.Frame.update(root)
-                    else:
-                        status = 404
-                        root.addrow(method, status, fuzzed, len(fuzzed))
-                        self.fuzz_counter = self.fuzz_counter + 1
-                        #self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
-                        tkinter.Frame.update(root)
-                        #print("Error here at rquest status: " + str(e))
+                except:
+                    print("Thread Exception, returning 408")
+                    status = 408
+                    root.addrow(method, status, fuzzed, len(fuzzed))
+                    self.fuzz_counter = self.fuzz_counter + 1
+                    # self.dbConn.send_values([self.full_url, fuzzed, status, len(fuzzed)])
+                    tkinter.Frame.update(root)
+                    # print("Error here at rquest status: " + str(e))
             del executor
 
     def get_full_url(self, url, module):
@@ -458,8 +436,10 @@ def write_response(req, filename):
         f.write('\n\n\n')
         f.close()
 
+
 def signal_handler(signum, frame):
     raise Exception("Timed out!")
+
 
 def login_to_Site(username="", password=""):
     global req_Session
@@ -474,6 +454,7 @@ def login_to_Site(username="", password=""):
     finally:
         pass
     #
+
 
 def set_auth(username, password, login_page):
     global req_Session

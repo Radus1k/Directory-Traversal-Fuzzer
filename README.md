@@ -17,6 +17,4 @@ make sure to be in the "main" folder
 Running the fuzzer from a Python IDE: 
 Set the following configuration: 
 *Interpetor: Python 3.8 or higher
-*Script: main/__init__.py 
-
-
+*Script: main/__init__.py
